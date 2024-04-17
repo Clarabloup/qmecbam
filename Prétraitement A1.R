@@ -1,3 +1,4 @@
+#test
 cat("\014") # Clear console
 rm(list=ls())# Clean workspace
 
