@@ -250,6 +250,7 @@ Qmec_original_gauging$date=as.POSIXct(paste(Qmec_original_gauging$year,
                                             Qmec_original_gauging$minute,
                                             Qmec_original_gauging$second), format="%Y %m %d %H %M %S")
 
+
 g=g+geom_line(data=Qmec_original_gauging,aes(x=date,y=Q,color='Simulation_Qmec'), linewidth=1)
 
 g=g+geom_ribbon(data=dat,aes(x = date,ymin=Q-u_Q,ymax=Q+u_Q,fill='Gaugings'),alpha=0.15)+

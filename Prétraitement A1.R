@@ -1,4 +1,3 @@
-#test
 cat("\014") # Clear console
 rm(list=ls())# Clean workspace
 
@@ -7,16 +6,16 @@ library(data.table)
 library(dplyr)
 
 # directories
-dir.bam <- 'C:/Users/cchabrillan/Documents/RQmec/TestsA1/R/'
+dir.bam <- "C:/Users/cchabrillan/Documents/RQmec/Tests A1/R/Fichiers textes/"
 
 # Discharge measurements 
-Q.station <- 'Q_ADCP_Batiscan_A'
+Q.station <- 'Batiscan_d_Q.txt'
 
-setwd(dir.bam) # Repertoire de travail
+setwd(dir.bam)
 
 #two gauge stations
-wl.h1 <- 'h1Batiscan2009'
-wl.h2 <- 'h2Becancour2009'
+wl.h1 <- 'Batiscan_d_h.txt'
+wl.h2 <- 'Becancour_d_h.txt'
 
 interpolation.input='cubic'
 interpolation.model='linear' 
@@ -24,12 +23,12 @@ dt.stage.record=60     # in minutes
 dt.model = 1           # in minutes
 
 all.data=data=list(h1=data.frame(),h2=data.frame())
-all.data$h1<- fread(file.path(wl.h1,'3280-01-JAN-2000_slev.csv'),skip=7)
-all.data$h2 <- fread(file.path(wl.h2,'3250-01-JAN-2000_slev.csv'),skip=7)
+all.data$h1<- fread(file.path(wl.h1))
+all.data$h2 <- fread(file.path(wl.h2))
 
 # Initial date to capture the tide
 date.start <- data.frame('year'=2009,
-                         'month'=8,
+                         'month'="Aug",
                          'day'=15,
                          'hour'=0,
                          'minute'=0,
@@ -37,7 +36,7 @@ date.start <- data.frame('year'=2009,
 
 # Final date to capture the tide
 date.end <- data.frame('year'=2009,
-                       'month'=8,
+                       'month'="Aug",
                        'day'=30,
                        'hour'=0,
                        'minute'=0,
@@ -46,29 +45,22 @@ date.end <- data.frame('year'=2009,
 # Pre-treatment of input data
 for(i in 1:length(all.data)){
   
-  colnames(all.data[[i]]) <- c('year','month','day','hour','minute','h')
+  colnames(all.data[[i]]) <- c('Date','Heure','h')
   
-  all.data[[i]] <- data.frame(all.data[[i]][,1:5],
-                              second=rep(0,nrow(all.data[[i]])),
-                              stage=all.data[[i]][,6])
+  all.data[[i]] <- data.frame(all.data[[i]][,1:2],
+                              stage=all.data[[i]][,3])
+  
   # transform and add date in a different format
-  all.data[[i]]$date=as.POSIXct(paste(all.data[[i]]$year, 
-                                      all.data[[i]]$month, 
-                                      all.data[[i]]$day, 
-                                      all.data[[i]]$hour, 
-                                      all.data[[i]]$minute,
-                                      all.data[[i]]$second), format="%Y %m %d %H %M %S")
-  
+  all.data[[i]]$date=paste(all.data[[i]]$Date,all.data[[i]]$Heure)
+  all.data[[i]]$date=as.POSIXct(all.data[[i]]$date, format="%d-%b-%Y %H:%M:%S")
   # Water level measurement during period a specific period of time
-  data[[i]]<- all.data[[i]][dplyr::between(all.data[[i]][,1:6],
-                                           date.start[,1:6],
-                                           date.end[,1:6]),]
-  
+  data[[i]]<- all.data[[i]][dplyr::between(all.data[[i]]$date,
+                                           as.POSIXct("2009-06-15 00:00:00"),
+                                           as.POSIXct("2009-06-30 00:00:00")),]
   # Interpolation input if NA detected
   gap=any(as.numeric(diff(data[[i]]$date),units='mins')!=dt.stage.record)
-  if(gap==TRUE){
-    time.inter.input.data = seq(data[[i]]$date[1],
-                                data[[i]]$date[nrow(data[[i]])],by=dt.stage.record*(60))
+  if(gap==TRUE){time.inter.input.data = seq(data[[i]]$date[21],
+                                data[[i]]$date[nrow(data[[i]])],by=dt.stage.record/60)
     if(interpolation.input=='cubic'){
       h=spline(x=data[[i]]$date,y=data[[i]]$h,method = "fmm",xout=time.inter.input.data)
     }else if(interpolation.input=='linear'){
@@ -123,24 +115,26 @@ if(inter.required==T){
                                 u.h1=0,
                                 h2=h2$y,
                                 u.h2=0)
+  print(data.model.inter)
 }else{
   data.model.inter = data.wl
 }
 
-ADCP.Q.measurements <- data.frame(fread(paste0(dir.discharge,Q.station,'.txt')))
-colnames(ADCP.Q.measurements) <- gsub("s","",colnames(ADCP.Q.measurements))
-colnames(ADCP.Q.measurements) [6] <- 'second'
-
+ADCP.Q.measurements <- data.frame(fread(paste0(Q.station)))
+ADCP.Q.measurements$date=paste(ADCP.Q.measurements$Date,ADCP.Q.measurements$Heure)
+ADCP.Q.measurements$date=as.POSIXct(ADCP.Q.measurements$date, format="%d-%b-%Y %H:%M:%S")
+time.inter.model =seq(ADCP.Q.measurements$date[1],ADCP.Q.measurements$date[nrow(ADCP.Q.measurements)],by=dt.stage.record/60)
+print (time.inter.model)
+print(ADCP.Q.measurements)
 # Merge water level and discharge measurements (if)
 data.model.Q.wl <- merge(data.model.inter, 
                          ADCP.Q.measurements, 
-                         by = c("year", "month", "day", "hour", "minute", "second"),
+                         by = c("date"),
                          all.x = T,
                          all.y = T)
 
 # cal.data = data.model.Q.wl[which(!is.na(data.model.Q.wl$Q))[1]:
 #                              rev(which(!is.na(data.model.Q.wl$Q)))[1],]
-
 cal.data = data.model.Q.wl
 
 # Replace NA by -9999 for BaM! (manage of missing values)
