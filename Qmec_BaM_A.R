@@ -8,12 +8,12 @@ library(psych) #analyses stats, corrélation, tests...
 
 set.seed(2024)
 # directory BaM! results, générer toujours les mêmes résultats
-dir <- 'C:/Users/famendezrios/Documents/Felipe_MENDEZ/Stagiaires/2024_maree/1_Clara_Chabrillangeas'
-setwd(file.path(dir,'Qmec_BaM'))
-workspace=file.path(dir,'Qmec_BaM','BaM_workspace')
+dir <- "C:/Users/cchabrillan/Documents/RQmec/Tests A1/R/Fichiers textes/"
+setwd(file.path(dir,'Résultats'))
+workspace=file.path(dir,'Résultats')
 
 # Read simulation from original Qmec model 
-Qmec_original=read.table('C:/Users/famendezrios/Documents/Felipe_MENDEZ/GitHub/Qmec/results/F2/simulation.txt',header = T)
+ Qmec_original=read.table('C:/Users/cchabrillan/Documents/Qmec Codeocean/results/A1/simulation.txt',header = T)
 
 # Do calibration ?
 run_option_calibration = T
@@ -35,7 +35,7 @@ test.prior.qmec.info = F
 # Read calibration data (h1,h2, Q)
 dat=read.table('calibrationData.txt',header = T, sep = '\t')
 
-D=dataset(X=dat[c('h1','h2')],Y=dat['Q'],Yu=dat['u_Q'],data.dir=workspace)
+D=dataset(X=dat[c('h1','h2')],Y=dat['QBatiscan'],data.dir=workspace)
 
 # Prior information of parameters
 if(test.prior.qmec.info==T){
@@ -84,10 +84,10 @@ if(test.original.values==F){
   Q0=parameter(name='Q0',init=0,prior.dist='FIX')
   
   # Posterior values from codeOcean
-  Be=parameter(name='Be',init=1406.7822,prior.dist='FIX')
-  he=parameter(name='he',init=22.5903 ,prior.dist='FIX')
-  dzeta=parameter(name='dzeta',init=-1.1744,prior.dist='FIX')
-  ne=parameter(name='ne',init=0.048125,prior.dist='FIX')
+  Be=parameter(name='Be',init=2895.7669,prior.dist='FIX')
+  he=parameter(name='he',init=15.0131 ,prior.dist='FIX')
+  dzeta=parameter(name='dzeta',init=-0.59874,prior.dist='FIX')
+  ne=parameter(name='ne',init=0.09943,prior.dist='FIX')
   Q0=parameter(name='Q0',init=0,prior.dist='FIX')
   
 }
@@ -131,7 +131,7 @@ BaM(mod=M,data=D,workspace=workspace,
 
 # Analyse results
 # Read 'cooked' MCMC file in the workspace
-MCMC=readMCMC(file.path(workspace,'Results_Cooking.txt'))
+MCMC=readMCMC(file=workspace,'Results_Cooking.txt'))
 
 png(file.path('Graphiques','MCMC_trace.png'),width=2500,height=2000,res=300)
 # Trace plot for each parameter, useful to assess convergence.
@@ -249,6 +249,7 @@ Qmec_original_gauging$date=as.POSIXct(paste(Qmec_original_gauging$year,
                                             Qmec_original_gauging$hour, 
                                             Qmec_original_gauging$minute,
                                             Qmec_original_gauging$second), format="%Y %m %d %H %M %S")
+
 
 g=g+geom_line(data=Qmec_original_gauging,aes(x=date,y=Q,color='Simulation_Qmec'), linewidth=1)
 
