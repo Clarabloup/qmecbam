@@ -6,7 +6,7 @@ library(data.table)
 library(dplyr)
 
 # directories
-dir.bam <- "C:/Users/cchabrillan/Documents/RQmec/Tests A1/R/Fichiers textes/"
+dir.bam <- "C:/Users/cchabrillan/Documents/RQmec/TestsA1/R/Fichierstextes/"
 
 # Discharge measurements 
 Q.station <- 'Batiscan_d_Q.txt'
@@ -63,7 +63,7 @@ for(i in 1:length(all.data)){
   # Interpolation input if NA detected
   gap=any(as.numeric(diff(data[[i]]$date),units='mins')!=dt.stage.record)
   if(gap==TRUE){time.inter.input.data = seq(data[[i]]$date[21],
-                                data[[i]]$date[nrow(data[[i]])],by=dt.stage.record/60)
+                                data[[i]]$date[nrow(data[[i]])],by=dt.stage.record)
     if(interpolation.input=='cubic'){
       h=spline(x=data[[i]]$date,y=data[[i]]$h,method = "fmm",xout=time.inter.input.data)
     }else if(interpolation.input=='linear'){
@@ -96,7 +96,7 @@ data.wl <- data.wl %>% arrange(date)
 inter.required =any(dt.stage.record!=dt.model)
 if(inter.required==T){
   # interpolation.model to get a time step defined at dt.model  
-  time.inter.model =seq(data.wl$date[1],data.wl$date[nrow(data.wl)],by=dt.stage.record/60)
+  time.inter.model =seq(data.wl$date[1],data.wl$date[nrow(data.wl)],by=dt.stage.record)
   
   if(interpolation.model=='cubic'){
     h1=spline(x=data.wl$date,y=data.wl$h1,method = "fmm",xout=time.inter.model)
@@ -150,3 +150,4 @@ write.table(cal.data,
             quote=F,
             col.names = T,
             row.names = F)
+
