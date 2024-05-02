@@ -9,13 +9,13 @@ library(dplyr)
 dir.bam <- "C:/Users/cchabrillan/Documents/RQmec/TestsA1/R/Fichierstextes/"
 
 # Discharge measurements 
-Q.station <- 'Batiscan_d_Q.txt'
+Q.station <- 'Q_ADCP_Batiscan_A.txt'
 
 setwd(dir.bam)
 
 #two gauge stations
-wl.h1 <- 'Batiscan_d_h.txt'
-wl.h2 <- 'Becancour_d_h.txt'
+wl.h1 <- 'Becancour_d_h.txt'
+wl.h2 <- 'Batiscan_d_h.txt'
 
 interpolation.input='cubic'
 interpolation.model='linear' 
@@ -124,8 +124,8 @@ if(inter.required==T){
 }
 
 ADCP.Q.measurements <- data.frame(fread(paste0(Q.station)))
-ADCP.Q.measurements$date=paste(ADCP.Q.measurements$Date,ADCP.Q.measurements$Heure)
-ADCP.Q.measurements$date=as.POSIXct(ADCP.Q.measurements$date, format="%d-%b-%Y %H:%M:%S")
+ADCP.Q.measurements$date=paste(ADCP.Q.measurements$days,ADCP.Q.measurements$months,ADCP.Q.measurements$years,ADCP.Q.measurements$hours,ADCP.Q.measurements$minutes,ADCP.Q.measurements$seconds)
+ADCP.Q.measurements$date <- as.POSIXct(ADCP.Q.measurements$date, format = "%d %m %Y %H %M %S")
 time.inter.model =seq(ADCP.Q.measurements$date[1],ADCP.Q.measurements$date[nrow(ADCP.Q.measurements)],by=dt.stage.record/60)
 print (time.inter.model)
 print(ADCP.Q.measurements)

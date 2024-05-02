@@ -8,12 +8,12 @@ library(psych) #analyses stats, corrélation, tests...
 
 set.seed(2024)
 # directory BaM! results, générer toujours les mêmes résultats
-dir <- "C:/Users/cchabrillan/Documents/RQmec/Tests A1/R/Fichiers textes/"
-setwd(file.path(dir,'Résultats'))
-workspace=file.path(dir,'Résultats')
+dir <- "C:/Users/cchabrillan/Documents/RQmec/TestsA1/R/Fichierstextes"
+setwd(file.path(dir,'Resultats'))
+workspace=file.path(dir,'Resultats')
 
 # Read simulation from original Qmec model 
- Qmec_original=read.table('C:/Users/cchabrillan/Documents/Qmec Codeocean/results/A1/simulation.txt',header = T)
+Qmec_original=read.table('C:/Users/cchabrillan/Documents/Qmec Codeocean/results/A1/simulation.txt',header = T, sep='\t')
 
 # Do calibration ?
 run_option_calibration = T
@@ -33,9 +33,9 @@ if(test.original.values==F){
 test.prior.qmec.info = F
 
 # Read calibration data (h1,h2, Q)
-dat=read.table('calibrationData.txt',header = T, sep = '\t')
+dat=read.table('C:/Users/cchabrillan/Documents/RQmec/TestsA1/R/Fichierstextes/calibrationData.txt',header = T, sep='\t')
 
-D=dataset(X=dat[c('h1','h2')],Y=dat['QBatiscan'],data.dir=workspace)
+D=dataset(X=dat[c('h1','h2')],Y=dat['Q'],data.dir=workspace)
 
 # Prior information of parameters
 if(test.prior.qmec.info==T){
@@ -92,11 +92,11 @@ if(test.original.values==F){
   
 }
 
-d1=parameter(name='d1',init=-1.379,prior.dist='FIX')
-d2=parameter(name='d2',init=-1.958,prior.dist='FIX')
+d1=parameter(name='d1',init=2.556,prior.dist='FIX')
+d2=parameter(name='d2',init=1.890,prior.dist='FIX')
 c=parameter(name='c',init=4/3,prior.dist='FIX')
 g=parameter(name='g',init=9.81,prior.dist='FIX')
-dx=parameter(name='dx',init=38000,prior.dist='FIX')
+dx=parameter(name='dx',init=18000,prior.dist='FIX')
 dt=parameter(name='dt',init=dt_model,prior.dist='FIX')
 
 # Model
@@ -107,9 +107,9 @@ M=model(ID='SFDTidal_Qmec',
 remnant=remnantErrorModel(funk='Constant',
                           par=list(parameter(name='gamma1',init=1000,prior.dist='Uniform',prior.par=c(0,10000))))
 # Settings of parameters for mcmc cooking
-nCycles = 200 # Number of cycles
-burn=0.5      # Percentage of data burned
-nSlim=10      # Slim factor: after burning, only one iteration every Nslim is kept.
+nCycles = 1 # Number of cycles
+burn=0      # Percentage of data burned
+nSlim=1      # Slim factor: after burning, only one iteration every Nslim is kept.
 
 # Set up configuration files : careful, same quantity of remnants configuration files as number of observations
 mcmc_temp=mcmcOptions(nCycles=nCycles)
@@ -131,7 +131,7 @@ BaM(mod=M,data=D,workspace=workspace,
 
 # Analyse results
 # Read 'cooked' MCMC file in the workspace
-MCMC=readMCMC(file=workspace,'Results_Cooking.txt'))
+MCMC=readMCMC(file.path(workspace,'Results_Cooking.txt'))
 
 png(file.path('Graphiques','MCMC_trace.png'),width=2500,height=2000,res=300)
 # Trace plot for each parameter, useful to assess convergence.
@@ -210,12 +210,13 @@ priorU=prediction(X=dat[c('h1','h2')],spagFiles='priorU.spag',data.dir=workspace
                   priorNsim = nrow(MCMC), doParametric=TRUE,doStructural=FALSE)
 # Re-run BaM, but in prediction mode
 BaM(mod=M,data=D,remnant=list(remnant), # model and data
+    workspace=workspace, 
     pred=list(totalU,paramU,maxpost,priorU), # list of predictions
     doCalib=FALSE,doPred=TRUE) # Do not re-calibrate but do predictions
 
 # Transform -9999 to NA (missing values)
 dat$Q[which(dat$Q==-9999)] <- NA
-dat$u_Q[which(dat$u_Q==-9999)] <- NA
+#dat$u_Q[which(dat$u_Q==-9999)] <- NA
 
 # Transform and add date in a different format
 dat$date=as.POSIXct(paste(dat$year, dat$month, dat$day, dat$hour, dat$minute, dat$second), format="%Y %m %d %H %M %S")
@@ -232,9 +233,9 @@ g=g+geom_line(data=cbind(env,date=dat$date),aes(x=date,y=V1,color='Simulation_Ba
 
 ##### Load Qmec results
 # Initial date to capture the tide
-date_start <- dat[1,1:6]
+date_start <- dat[1,2:7]
 # Final date to capture the tide
-date_end <- dat[nrow(dat),1:6]
+date_end <- dat[nrow(dat),2:7]
 
 colnames(Qmec_original) <- c(colnames(date_end),'Q')
 
@@ -253,8 +254,8 @@ Qmec_original_gauging$date=as.POSIXct(paste(Qmec_original_gauging$year,
 
 g=g+geom_line(data=Qmec_original_gauging,aes(x=date,y=Q,color='Simulation_Qmec'), linewidth=1)
 
-g=g+geom_ribbon(data=dat,aes(x = date,ymin=Q-u_Q,ymax=Q+u_Q,fill='Gaugings'),alpha=0.15)+
-  geom_point(data=dat,aes(date,Q,color='Gaugings'),alpha=0.5)
+g=g+#geom_ribbon(data=dat,aes(x = date,ymin=Q-u_Q,ymax=Q+u_Q,fill='Gaugings'),alpha=0.15)+
+geom_point(data=dat,aes(date,Q,color='Gaugings'),alpha=0.5)
 
 export=g+labs(x='time (hours)',y='Discharge (m3/s)')+
   scale_color_manual(name=NULL,
@@ -263,7 +264,7 @@ export=g+labs(x='time (hours)',y='Discharge (m3/s)')+
   scale_fill_manual(name='Uncertainty',
                     values=c('Total'='red','Parametric'='yellow','Gaugings'='green'),
                     labels=c('Gaugings','Parametric','Total'))+
-  labs(title = paste0('Calibration between Neuville - Lauzon using Saint-Nicolas gaugings on ',
+  labs(title = paste0('Calibration between Batiscan - Becancour ',
                       paste(date_start$day,date_start$month,date_start$year,sep='/')))+
   guides(color=guide_legend(override.aes = list(shape=c(16,NA,NA),
                                                 linetype =c('blank','solid','solid'))))+
@@ -284,3 +285,4 @@ png(file.path('Graphiques','simulations_vs_observations_zoom.png'),
     width = 2500,height = 1800,res=300)
 print(zoom_plot)
 dev.off()
+
