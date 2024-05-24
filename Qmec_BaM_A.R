@@ -13,7 +13,7 @@ setwd(file.path(dir,'Resultats'))
 workspace=file.path(dir,'Resultats')
 
 # Read simulation from original Qmec model 
-Qmec_original=read.table('C:/Users/cchabrillan/Documents/Qmec Codeocean/results/A1/simulation.txt',header = T, sep='\t')
+Qmec_original=read.table('C:/Users/cchabrillan/Documents/Qmec Codeocean/results/F2/simulation.txt',header = T, sep='\t')
 
 # Do calibration ?
 run_option_calibration = T
@@ -33,7 +33,7 @@ if(test.original.values==F){
 test.prior.qmec.info = F
 
 # Read calibration data (h1,h2, Q)
-dat=read.table('C:/Users/cchabrillan/Documents/RQmec/TestsA1/R/Fichierstextes/calibrationData.txt',header = T, sep='\t')
+dat=read.table('C:/Users/cchabrillan/Documents/RQmec/TestsA1/R/Fichierstextes/calibrationDataF2adcd.txt',header = T, sep='\t')
 
 D=dataset(X=dat[c('h1','h2')],Y=dat['Q'],data.dir=workspace)
 
@@ -84,19 +84,27 @@ if(test.original.values==F){
   Q0=parameter(name='Q0',init=0,prior.dist='FIX')
   
   # Posterior values from codeOcean
-  Be=parameter(name='Be',init=2895.7669,prior.dist='FIX')
-  he=parameter(name='he',init=15.0131 ,prior.dist='FIX')
-  dzeta=parameter(name='dzeta',init=-0.59874,prior.dist='FIX')
-  ne=parameter(name='ne',init=0.09943,prior.dist='FIX')
-  Q0=parameter(name='Q0',init=0,prior.dist='FIX')
+  #F2
+   Be=parameter(name='Be',init=1406.7824,prior.dist='FIX')
+   he=parameter(name='he',init=24.2588 ,prior.dist='FIX')
+   dzeta=parameter(name='dzeta',init=-0.5954,prior.dist='FIX')
+   ne=parameter(name='ne',init=0.048125,prior.dist='FIX')
+   Q0=parameter(name='Q0',init=0,prior.dist='FIX')
+  
+  #A1
+  #Be=parameter(name='Be',init=2895.7669,prior.dist='FIX')
+  #he=parameter(name='he',init=15.0131 ,prior.dist='FIX')
+  #dzeta=parameter(name='dzeta',init=-0.59874,prior.dist='FIX')
+  #ne=parameter(name='ne',init=0.09943,prior.dist='FIX')
+  #Q0=parameter(name='Q0',init=0,prior.dist='FIX')
   
 }
 
-d1=parameter(name='d1',init=2.556,prior.dist='FIX')
-d2=parameter(name='d2',init=1.890,prior.dist='FIX')
+d1=parameter(name='d1',init=-1.379,prior.dist='FIX')
+d2=parameter(name='d2',init=-1.958,prior.dist='FIX')
 c=parameter(name='c',init=4/3,prior.dist='FIX')
 g=parameter(name='g',init=9.81,prior.dist='FIX')
-dx=parameter(name='dx',init=18000,prior.dist='FIX')
+dx=parameter(name='dx',init=38000,prior.dist='FIX')
 dt=parameter(name='dt',init=dt_model,prior.dist='FIX')
 
 # Model
@@ -264,7 +272,7 @@ export=g+labs(x='time (hours)',y='Discharge (m3/s)')+
   scale_fill_manual(name='Uncertainty',
                     values=c('Total'='red','Parametric'='yellow','Gaugings'='green'),
                     labels=c('Gaugings','Parametric','Total'))+
-  labs(title = paste0('Calibration between Batiscan - Becancour ',
+  labs(title = paste0('Calibration between Bécancour - Batiscan ',
                       paste(date_start$day,date_start$month,date_start$year,sep='/')))+
   guides(color=guide_legend(override.aes = list(shape=c(16,NA,NA),
                                                 linetype =c('blank','solid','solid'))))+

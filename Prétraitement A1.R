@@ -9,13 +9,13 @@ library(dplyr)
 dir.bam <- "C:/Users/cchabrillan/Documents/RQmec/TestsA1/R/Fichierstextes/"
 
 # Discharge measurements 
-Q.station <- 'Q_ADCP_Batiscan_A.txt'
+Q.station <- 'Q_ADCP_Saint-Nicolas_F.txt'
 
 setwd(dir.bam)
 
 #two gauge stations
-wl.h1 <- 'Becancour_d_h.txt'
-wl.h2 <- 'Batiscan_d_h.txt'
+wl.h1 <- 'Neuville_d_hadcd.txt'
+wl.h2 <- 'Lauzon_d_hadcd.txt'
 
 interpolation.input='cubic'
 interpolation.model='linear' 
@@ -24,20 +24,22 @@ dt.model = 1           # in minutes
 
 all.data=data=list(h1=data.frame(),h2=data.frame())
 all.data$h1<- fread(file.path(wl.h1))
+#all.data$h1<-all.data$h1[,-1,with=FALSE]
 all.data$h2 <- fread(file.path(wl.h2))
+#all.data$h2<-all.data$h2[,-1,with=FALSE]
 
 # Initial date to capture the tide
 date.start <- data.frame('year'=2009,
-                         'month'="Jun",
-                         'day'=15,
+                         'month'="Aug",
+                         'day'=16,
                          'hour'=0,
                          'minute'=0,
                          'second'=0)
 
 # Final date to capture the tide
 date.end <- data.frame('year'=2009,
-                       'month'="Jun",
-                       'day'=30,
+                       'month'="Aug",
+                       'day'=26,
                        'hour'=0,
                        'minute'=0,
                        'second'=0)
@@ -58,12 +60,12 @@ for(i in 1:length(all.data)){
   print(all.data[[i]])
   # Water level measurement during period a specific period of time
   data[[i]]<- all.data[[i]][dplyr::between(all.data[[i]]$date,
-                                           as.POSIXct("2009-06-15 00:00:00"),
-                                           as.POSIXct("2009-06-30 00:00:00")),]
+                                           as.POSIXct("2009-08-16 00:00:00"),
+                                           as.POSIXct("2009-08-26 00:00:00")),]
   # Interpolation input if NA detected
   gap=any(as.numeric(diff(data[[i]]$date),units='mins')!=dt.stage.record)
-  if(gap==TRUE){time.inter.input.data = seq(data[[i]]$date[21],
-                                data[[i]]$date[nrow(data[[i]])],by=dt.stage.record)
+  if(gap==TRUE){time.inter.input.data = seq(data[[i]]$date[1],
+                                data[[i]]$date[nrow(data[[i]])],by=dt.stage.record*(60))
     if(interpolation.input=='cubic'){
       h=spline(x=data[[i]]$date,y=data[[i]]$h,method = "fmm",xout=time.inter.input.data)
     }else if(interpolation.input=='linear'){
@@ -87,7 +89,7 @@ for(i in 1:length(all.data)){
 }
 
 # Merge results from water level measurements
-data.wl <- merge(data$h1,data$h2,by=c('year','month','day','hour','minute','second','date'),suffixes =c('1','2'))
+data.wl <- merge(data$h1,data$h2,by=c('Date','Heure','date'),suffixes =c('1','2'))
 data.wl <- data.wl %>% arrange(date)
 
 # Model environment 
@@ -96,7 +98,7 @@ data.wl <- data.wl %>% arrange(date)
 inter.required =any(dt.stage.record!=dt.model)
 if(inter.required==T){
   # interpolation.model to get a time step defined at dt.model  
-  time.inter.model =seq(data.wl$date[1],data.wl$date[nrow(data.wl)],by=dt.stage.record)
+  time.inter.model =seq(data.wl$date[1],data.wl$date[nrow(data.wl)],by=dt.model*dt.stage.record)
   
   if(interpolation.model=='cubic'){
     h1=spline(x=data.wl$date,y=data.wl$h1,method = "fmm",xout=time.inter.model)
@@ -145,7 +147,7 @@ cal.data[is.na(cal.data)] <- -9999
 
 #save calibration data
 write.table(cal.data,
-            file=paste0(dir.bam,'calibrationData.txt'),
+            file=paste0(dir.bam,'calibrationDataF2adcd.txt'),
             sep='\t ',
             quote=F,
             col.names = T,
